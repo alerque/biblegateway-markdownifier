@@ -5,6 +5,8 @@ Userscript to generate markdown from Biblegateway.com
 Once installed, simply browse to a passage on BibleGateway.com and a text area
 will appear with formatted markdown.
 
+![biblegateway.com preview](preview.png)
+
 The markdown produced will follow this structure:
 
 ```
