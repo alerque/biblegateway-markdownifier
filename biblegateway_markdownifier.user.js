@@ -55,10 +55,11 @@ $(document).ready(function() {
     var $text = $("div.result-text-style-normal").clone();
 
     // remove unnecessary stuff
-    $.each(['div', 'sup.xref', 'sup.footnote', 'h1', 'h2', 'h3', 'h4', 'h5'],
+    $.each(['div.crossrefs', 'sup.xref', 'sup.footnote', 'h1', 'h2', 'h3', 'h4', 'h5', 'ol'],
             function(i, matcher) {
         $text.find(matcher).remove();
     });
+
     $text.find('sup').removeAttr('class').removeAttr('id').after(' ');
     $text.contents().filter(function() {
         return this.nodeType == 8;
@@ -70,6 +71,8 @@ $(document).ready(function() {
     text = text.replace(/<a href=[^<]*<\/a>/gi, '');
     text = text.replace(/<sup value=[^<]*<\/sup>/gi, '');
     text = text.replace(/<sup data-link=[^<]*<\/sup>/gi, '');
+    text = text.replace(/<div[^>]*>/gi, '');
+    text = text.replace(/<\/div>/gi, '');
     text = text.replace(/<p><\/p>/gi, '');
     text = text.replace(/<p[^>]*>/gi, '\n');
     text = text.replace(/<\/p>/gi, '');
@@ -78,14 +81,15 @@ $(document).ready(function() {
     text = text.replace(/&nbsp;<sup>/gi, '<sup>');
     text = text.replace(/<sup>/gi, '<sup>**');
     text = text.replace(/&nbsp;<\/sup>/gi, '**<\/sup>');
-    text = text.replace(/  +/gi, ' ');
+    text = text.replace(/ +/gi, ' ');
+    text = text.replace(/ *\n/gi, '\n');
 
     // remove frequent leading/trailing newlines from verse content
     text = text.replace(/\s+$/, '');
     text = text.replace(/^\s+/, '');
 
     // use double space+newline for line breaks and block quote the whole thing
-    text = "  \n> " + text.split('\n').join('  \n> ');
+    text = "  \n> " + text.split('\n').join('<br />\n> ');
 
     // generate the complete markdown
     var markdown = markdownTemplate.format(
