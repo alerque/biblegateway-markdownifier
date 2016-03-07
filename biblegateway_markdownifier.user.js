@@ -1,11 +1,12 @@
 // ==UserScript==
 // @name           BibleGateway markdownifier
 // @namespace      http://github.com/alerque
-// @description    Create copypasteable markdown from BibleGateway passages
-// @include        http://www.biblegateway.com/passage/*
-// @version        0.1.3
-// @author         Hannu Hartikainen, Caleb Maclennan
+// @description    Create copy-pasteable markdown from BibleGateway passages
+// @match          http*://www.biblegateway.com/passage/*
+// @version        0.2.0
+// @author         Hannu Hartikainen, Caleb Maclennan, Scott Tomaszewski
 // @license        MIT
+// @grant          none
 // ==/UserScript==
 
 /*!
@@ -33,7 +34,7 @@ $(document).ready(function() {
     // http://stackoverflow.com/questions/610406/javascript-equivalent-to-printf-string-format/4673436#4673436
     String.prototype.format = function() {
       var args = arguments;
-      return this.replace(/{(\d+)}/g, function(match, number) { 
+      return this.replace(/{(\d+)}/g, function(match, number) {
         return typeof args[number] != 'undefined'
           ? args[number]
           : '{' + number + '}'
@@ -44,19 +45,21 @@ $(document).ready(function() {
     // answer template
     var markdownTemplate = "> **[{0}]({2})** {1} {3}";
 
-    var $textarea = $('<textarea rows="25" cols="80" class="markdown-export"></textarea>');
+    var $textarea = $('<textarea rows="15" cols="80" class="markdown-export"></textarea>');
 
-    var passage = $("div.heading.passage-class-0 > h3").text();
-    var translation = $("div.heading.passage-class-0 > p.txt-sm").text();
+    var passage = $("span.passage-display-bcv").text();
+    var translation = $("span.passage-display-version").text();
     var translation_abbr = /\([^)]*\)/.exec(translation);
+    var newline = "\n>";
 
     var $text = $("div.result-text-style-normal").clone();
 
     // remove unnecessary stuff
-    $.each(['div', 'sup.xref', 'sup.footnote', 'h3', 'h4', 'h5'],
+    $.each(['div.crossrefs', 'sup.xref', 'sup.footnote', 'h1', 'h2', 'h3', 'h4', 'h5', 'ol'],
             function(i, matcher) {
         $text.find(matcher).remove();
     });
+
     $text.find('sup').removeAttr('class').removeAttr('id').after(' ');
     $text.contents().filter(function() {
         return this.nodeType == 8;
@@ -67,25 +70,31 @@ $(document).ready(function() {
     text = text.replace(/<br *\/?>/gi, '\n');
     text = text.replace(/<a href=[^<]*<\/a>/gi, '');
     text = text.replace(/<sup value=[^<]*<\/sup>/gi, '');
+    text = text.replace(/<sup data-link=[^<]*<\/sup>/gi, '');
+    text = text.replace(/<div[^>]*>/gi, '');
+    text = text.replace(/<\/div>/gi, '');
     text = text.replace(/<p><\/p>/gi, '');
     text = text.replace(/<p[^>]*>/gi, '\n');
     text = text.replace(/<\/p>/gi, '');
     text = text.replace(/<\/?font[^>]*>/gi, '');
     text = text.replace(/<\/?span[^>]*>/gi, '');
     text = text.replace(/&nbsp;<sup>/gi, '<sup>');
-    text = text.replace(/  +/gi, ' ');
+    text = text.replace(/<sup>/gi, '<sup>**');
+    text = text.replace(/&nbsp;<\/sup>/gi, '**<\/sup>');
+    text = text.replace(/ +/gi, ' ');
+    text = text.replace(/ *\n/gi, '\n');
 
-	// remove frequent leading/trailing newlines from verse content
-	text = text.replace(/\s+$/, '');
-	text = text.replace(/^\s+/, '');
+    // remove frequent leading/trailing newlines from verse content
+    text = text.replace(/\s+$/, '');
+    text = text.replace(/^\s+/, '');
 
-	// use double space+newline for line breaks and block quote the whole thing
-    text = "  \n> " + text.split('\n').join('  \n> ');
+    // use double space+newline for line breaks and block quote the whole thing
+    text = "  \n> " + text.split('\n').join('<br />\n> ');
 
     // generate the complete markdown
     var markdown = markdownTemplate.format(
             passage,
-            translation_abbr,
+            translation_abbr + newline,
             document.location,
             text
         );
@@ -93,7 +102,6 @@ $(document).ready(function() {
     // populate textarea and set focus handler
     $textarea.text(markdown);
     $textarea.focus(function() {this.select()});
-    
-    $("div.passage-left").append($textarea);
-});
 
+    $("div.publisher-info-bottom").prepend($textarea);
+});
