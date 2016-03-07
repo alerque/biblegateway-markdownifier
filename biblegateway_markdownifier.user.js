@@ -2,7 +2,8 @@
 // @name           BibleGateway markdownifier
 // @namespace      http://github.com/alerque
 // @description    Create copy-pasteable markdown from BibleGateway passages
-// @match          http*://www.biblegateway.com/passage/*
+// @include        http://www.biblegateway.com/passage/*
+// @include        https://www.biblegateway.com/passage/*
 // @version        0.2.0
 // @author         Hannu Hartikainen, Caleb Maclennan, Scott Tomaszewski
 // @license        MIT
